@@ -5,6 +5,7 @@ import os
 import urllib
 
 from datetime import datetime
+from django.http.response import JsonResponse
 
 from django.utils.translation import gettext as _
 
@@ -79,12 +80,12 @@ from dashboard.models import (
 from sawaliram_auth.models import Notification, User, VolunteerRequest
 from public_website.views import SearchView
 
+from django.core.files.storage import FileSystemStorage
 import pandas as pd
 from pprint import pprint
 
 
 # Dashboard Home
-
 @method_decorator(login_required, name='dispatch')
 @method_decorator(volunteer_permission_required, name='dispatch')
 class DashboardHome(View):
@@ -2625,3 +2626,17 @@ def get_work_in_progress_view(request):
     response = render(request, 'dashboard/work-in-progress.html')
     response.status_code = 501  # Not Implemented
     return response
+
+
+# save the image in media directory after upload
+class Saveimagedata(View):
+    def post(self, request):
+        if request.method == "POST":
+            image = request.FILES['image'] if 'image' in request.FILES else None
+
+            if image:
+                fs = FileSystemStorage()
+                file = fs.save(image.name, image)
+                url = fs.url(file)
+
+                return JsonResponse({"fileurl": url })
